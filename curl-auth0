@@ -32,6 +32,7 @@ TOKEN_PAYLOAD="{
    \"client_id\":   \"${AUTH0_CLIENTID}\",
    \"username\":    \"${AUTH0_USERNAME}\",
    \"password\":    \"${AUTH0_PASSWORD}\",
+   \"audience\":    \"https://ceftb.org/api/v1\",
    \"realm\":       \"Username-Password-Authentication\",
    \"grant_type\":  \"password\",
    \"scope\":       \"${AUTH0_SCOPE}\",
@@ -43,7 +44,7 @@ JWT=$(echo ${TOKEN_PAYLOAD} | curl -s ${CURL_VERBOSE} -X POST --header 'Content-
 
 
 # extract the id_token in the JWT
-ID_TOKEN=$(echo ${JWT} | jq -r '.id_token')
+ACCESS_TOKEN=$(echo ${JWT} | jq -r '.access_token')
 
 # execute the asked cURL with the correct Authorization header
-echo $ID_TOKEN
+echo $ACCESS_TOKEN
