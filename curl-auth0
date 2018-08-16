@@ -42,9 +42,8 @@ TOKEN_PAYLOAD="{
 # call Auth0 to retrieve the JWT
 JWT=$(echo ${TOKEN_PAYLOAD} | curl -s ${CURL_VERBOSE} -X POST --header 'Content-Type: application/json' --data-binary @- ${TOKEN_URL})
 
-
 # extract the id_token in the JWT
-ACCESS_TOKEN=$(echo ${JWT} | jq -r '.access_token')
+ACCESS_TOKEN=$(echo ${JWT} | grep -Po '"access_token":.*?[^\\]"' | cut -d ':' -f 2 | tr -d '"')
 
 # execute the asked cURL with the correct Authorization header
 echo $ACCESS_TOKEN

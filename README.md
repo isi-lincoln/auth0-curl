@@ -14,7 +14,6 @@ AUTH0_PASSWORD
 
 - Modify AUTH0_DOMAIN in script to point to your domain
 
-- Install [jq](http://stedolan.github.io/jq/), a very nice JSON parser
 
 # Usage
 ``` ./curl-auth0 ```
