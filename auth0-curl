@@ -14,36 +14,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Pre-requisite: you need jq - http://stedolan.github.io/jq/
-# set -x
 
 CURL_ARGS=$@
 
-AUTH0_DOMAIN=cef.auth0.com
-AUTH0_CLIENTID=$(sed -n '1p' .passwd)
-AUTH0_USERNAME=$(sed -n '2p' .passwd)
-AUTH0_PASSWORD=$(sed -n '3p' .passwd)
+CONFILE=".passwd"
+if [ ! -f $INFOFILE ]; then
+    echo "Missing configuration file: $CONFILE !";
+    exit 1;
+fi
 
-# AUTH0_SCOPE='openid email'
+AUTH0_DOMAIN=$(sed -n '1p' $CONFILE)
+AUTH0_CLIENTID=$(sed -n '2p' $CONFILE)
+AUTH0_USERNAME=$(sed -n '3p' $CONFILE)
+AUTH0_PASSWORD=$(sed -n '4p' $CONFILE)
+AUTH0_AUDIENCE=$(sed -n '5p' $CONFILE)
+AUTH0_REALM="Username-Password-Authentication"
+AUTH0_GRANT="password"
 AUTH0_SCOPE="profile openid email"
 
 TOKEN_URL=https://${AUTH0_DOMAIN}/oauth/token
 TOKEN_PAYLOAD="{
-   \"client_id\":   \"${AUTH0_CLIENTID}\",
-   \"username\":    \"${AUTH0_USERNAME}\",
-   \"password\":    \"${AUTH0_PASSWORD}\",
-   \"audience\":    \"https://ceftb.org/api/v1\",
-   \"realm\":       \"Username-Password-Authentication\",
-   \"grant_type\":  \"password\",
-   \"scope\":       \"${AUTH0_SCOPE}\",
-   \"device\":      \"\"
+  \"client_id\":   \"${AUTH0_CLIENTID}\",
+  \"username\":    \"${AUTH0_USERNAME}\",
+  \"password\":    \"${AUTH0_PASSWORD}\",
+  \"audience\":    \"${AUTH0_AUDIENCE}\",
+  \"realm\":       \"${AUTH0_REALM}\",
+  \"grant_type\":  \"${AUTH0_GRANT}\",
+  \"scope\":       \"${AUTH0_SCOPE}\",
+  \"device\":      \"\"
 }"
 
 # call Auth0 to retrieve the JWT
-JWT=$(echo ${TOKEN_PAYLOAD} | curl -s ${CURL_VERBOSE} -X POST --header 'Content-Type: application/json' --data-binary @- ${TOKEN_URL})
+JWT=$(echo ${TOKEN_PAYLOAD} | curl -s ${CURL_VERBOSE} -X POST -H 'Content-Type: application/json' --data-binary @- ${TOKEN_URL})
 
 # extract the id_token in the JWT
-ACCESS_TOKEN=$(echo ${JWT} | grep -Po '"access_token":.*?[^\\]"' | cut -d ':' -f 2 | tr -d '"')
+# check os version because osx requires egrep
+if [[ "$OSTYPE" == "linux"* ]]; then
+  ACCESS_TOKEN=$(echo ${JWT} | grep -Po '"access_token":.*?[^\\]"' | cut -d ':' -f 2 | tr -d '"')
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  ACCESS_TOKEN=$(echo ${JWT} | egrep -o '"access_token":.*?[^\\]"' | cut -d ':' -f 2 | tr -d '"')
+else
+  ACCESS_TOKEN=$(echo ${JWT} | grep -Po '"access_token":.*?[^\\]"' | cut -d ':' -f 2 | tr -d '"')
+fi
 
 # execute the asked cURL with the correct Authorization header
 echo $ACCESS_TOKEN
