@@ -18,7 +18,7 @@
 CURL_ARGS=$@
 
 CONFILE=".passwd"
-if [ ! -f $INFOFILE ]; then
+if [ ! -f "$CONFILE" ]; then
     echo "Missing configuration file: $CONFILE !";
     exit 1;
 fi
