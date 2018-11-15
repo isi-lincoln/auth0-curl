@@ -16,8 +16,21 @@
 
 
 CURL_ARGS=$@
+CONFILE=${CONFILE:-.passwd}
 
-CONFILE=".passwd"
+while getopts c:hH opt; do
+    case $opt in
+        c) CONFILE=$OPTARG
+            ;;
+        h|H)
+            echo $(basename $0) \[-c path/to/.passwd\]
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
 if [ ! -f "$CONFILE" ]; then
     echo "Missing configuration file: $CONFILE !";
     exit 1;
